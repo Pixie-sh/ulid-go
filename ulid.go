@@ -203,7 +203,10 @@ func (id *ULID) Scan(src interface{}) (err error) {
 			return id.UnmarshalBinary(v)
 		case uuidStringLength:
 			*id, err = UnmarshalUUID(string(v))
-			return createFormatError.WithNestedError(err)
+			if err != nil {
+				return createFormatError.WithNestedError(err)
+			}
+			return nil
 		default:
 			return createFormatError
 		}
@@ -212,7 +215,10 @@ func (id *ULID) Scan(src interface{}) (err error) {
 			return createFormatError
 		}
 		*id, err = UnmarshalUUID(v)
-		return createFormatError.WithNestedError(err)
+		if err != nil {
+			return createFormatError.WithNestedError(err)
+		}
+		return nil
 	default:
 		return createFormatError
 	}
