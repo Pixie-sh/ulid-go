@@ -101,7 +101,7 @@ func UnmarshalUint64(num uint64) (ULID, error) {
 func UnmarshalUUID(s string) (ULID, error) {
 	id := ULID{}
 
-	if len(s) != uuidEncodedSize {
+	if len(s) != uuidStringLength {
 		return id, errors.New("invalid data size len(%d)", len(s)).WithErrorCode(InvalidSizeULIDSystemErrorCode)
 	}
 
@@ -155,7 +155,7 @@ func (id ULID) Bytes() ([]byte, error) {
 }
 
 func (id ULID) UUID() string {
-	byteSlice := make([]byte, uuidEncodedSize)
+	byteSlice := make([]byte, uuidStringLength)
 
 	hex.Encode(byteSlice[0:8], id[0:4])
 	byteSlice[8] = '-'
@@ -167,7 +167,7 @@ func (id ULID) UUID() string {
 	byteSlice[23] = '-'
 	hex.Encode(byteSlice[24:], id[10:])
 
-	return string(byteSlice)
+	return unsafe.String(&byteSlice[0], uuidStringLength)
 }
 
 func (id ULID) String() string {
@@ -184,37 +184,37 @@ func (id ULID) EncodeString() string {
 }
 
 func (id ULID) EncodeUUID() string {
-	buf := make([]byte, uuidEncodedSize-4)
+	buf := make([]byte, uuidStringLength-4)
 	hex.Encode(buf, id[:])
 
 	return *(*string)(unsafe.Pointer(&buf))
 }
 
 func (id *ULID) Scan(src interface{}) (err error) {
-	createFormatError := func() error {
-		return errors.New("invalid storage format: size must either be 16 bytes or a UUID string").
-			WithErrorCode(InvalidSizeULIDSystemErrorCode)
-	}
+	createFormatError := errors.
+		New("invalid storage format: size must either be 16 bytes or a UUID string").
+		WithErrorCode(InvalidSizeULIDSystemErrorCode)
+
 
 	switch v := src.(type) {
 	case []byte:
 		switch len(v) {
 		case ulid16Bytes:
 			return id.UnmarshalBinary(v)
-		case ulidUUIDStringLength:
+		case uuidStringLength:
 			*id, err = UnmarshalUUID(string(v))
-			return err
+			return createFormatError.WithNestedError(err)
 		default:
-			return createFormatError()
+			return createFormatError
 		}
 	case string:
-		if len(v) != ulidUUIDStringLength {
-			return createFormatError()
+		if len(v) != uuidStringLength {
+			return createFormatError
 		}
 		*id, err = UnmarshalUUID(v)
-		return err
+		return createFormatError.WithNestedError(err)
 	default:
-		return createFormatError()
+		return createFormatError
 	}
 }
 func (id ULID) Value() (driver.Value, error) {
@@ -258,7 +258,7 @@ func (id ULID) MarshalText() ([]byte, error) {
 }
 
 func (id *ULID) UnmarshalText(v []byte) error {
-	if len(v) == uuidEncodedSize {
+	if len(v) == uuidStringLength {
 		var err error
 		*id, err = UnmarshalUUID(string(v))
 		return err

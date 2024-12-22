@@ -4,6 +4,11 @@ import (
 	"github.com/pixie-sh/errors-go"
 	"io"
 )
+const (
+	textEncodedSize  = 26
+	uuidStringLength = 36
+	ulid16Bytes      = 16
+)
 
 var (
 	EmptyUID = ULID{}
@@ -17,11 +22,6 @@ var (
 	maxTime         = ULID{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}.time()
 	leftPad         = [6]byte{1, 36, 47, 223, 23, 0}
 	encoding        = "0123456789ABCDEFGHJKMNPQRSTVWXYZ"
-	textEncodedSize = 26
-	uuidEncodedSize = 36
-
-	ulid16Bytes          = 16
-	ulidUUIDStringLength = 36
 
 	InvalidSizeULIDSystemErrorCode       = errors.NewErrorCode("InvalidSizeULIDSystemErrorCode", 90412, 412)
 	InvalidTimeFormatULIDSystemErrorCode = errors.NewErrorCode("InvalidTimeFormatULIDSystemErrorCode", 90412, 412)
