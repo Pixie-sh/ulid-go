@@ -16,14 +16,13 @@ goos: darwin
 goarch: arm64
 pkg: github.com/pixie-sh/ulid-go
 cpu: Apple M3 Max
-BenchmarkNanoIDGeneration
-BenchmarkNanoIDGeneration-16         	 3062644	       388.9 ns/op
+BenchmarkNanoIDGeneration-16         	 4081274	       288.0 ns/op
 BenchmarkAnotherULIDGeneration
-BenchmarkAnotherULIDGeneration-16    	 4756365	       253.4 ns/op
+BenchmarkAnotherULIDGeneration-16    	 9510402	       125.9 ns/op
 BenchmarkULIDGeneration
-BenchmarkULIDGeneration-16           	 6347804	       176.8 ns/op
-BenchmarkUUIDGeneration
-BenchmarkUUIDGeneration-16           	 3714291	       325.3 ns/op
+BenchmarkULIDGeneration-16           	 8371111	       139.2 ns/op
+BenchmarkUUIDGeneration 
+BenchmarkUUIDGeneration-16           	 4945442	       246.9 ns/op
 PASS
 ```
 
