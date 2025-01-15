@@ -1,4 +1,4 @@
-package ulid
+package pulid
 
 import (
 	"github.com/google/uuid"
@@ -27,7 +27,7 @@ func BenchmarkAnotherULIDGeneration(b *testing.B) {
 }
 
 // Benchmark for ULID generation
-func BenchmarkULIDGeneration(b *testing.B) {
+func BenchmarkpULIDGeneration(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		s := MustNew().String()
 

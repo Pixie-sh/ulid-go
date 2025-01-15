@@ -1,4 +1,4 @@
-package ulid
+package pulid
 
 import (
 	"bytes"
@@ -33,7 +33,10 @@ func New(customEntropy ...io.Reader) (ULID, error) {
 		entropy = customEntropy[0]
 	}
 
-	if _, err = entropy.Read(id[6:]); err != nil {
+	//7th and 8th reserved for entity types
+	//2^{16} = 65536
+
+	if _, err = entropy.Read(id[9:]); err != nil {
 		return id, err
 	}
 

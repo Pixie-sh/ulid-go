@@ -1,4 +1,4 @@
-package ulid
+package pulid
 
 import (
 	"bytes"
@@ -51,7 +51,7 @@ func TestULIDToUUIDConversion(t *testing.T) {
 		t.Fatalf("UUID string mismatch: expected %s, got %s", uuidStr, parsedUUID.String())
 	}
 
-	t.Logf("ULID to UUID conversion successful: %s", uuidStr)
+	t.Logf("ULID to UUID conversion successful: %s - %s", id.String(), uuidStr)
 }
 
 func TestULIDFormatComparison(t *testing.T) {
@@ -233,7 +233,7 @@ func TestUUIDUniquenessAfterConversion(t *testing.T) {
 		uuidSet[uuidStr] = true
 	}
 
-	t.Logf("All UUIDs generated from ULIDs are unique for %d iterations", ulidCount)
+	t.Logf("All UUIDs generated from ULIDs are unique for %d iterations; %+v", ulidCount, uuidSet)
 }
 
 func TestULIDToUUIDMassiveUniqueness(t *testing.T) {
