@@ -1,9 +1,10 @@
-package ulid
+package pulid
 
 import (
 	cryptoRand "crypto/rand"
 	"github.com/pixie-sh/errors-go"
 )
+
 const (
 	textEncodedSize  = 26
 	uuidStringLength = 36
@@ -11,16 +12,19 @@ const (
 )
 
 var (
-	EmptyUID = ULID{}
+	EmptyUID         = ULID{}
+	MaxScopeValue    = Scope(65535)
+	ZeroedScopeValue = Scope(0)
 
-	defaultEntropy  = cryptoRand.Reader
-	maxTime         = ULID{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}.time()
-	leftPad         = [6]byte{1, 36, 47, 223, 23, 0}
-	encoding        = "0123456789ABCDEFGHJKMNPQRSTVWXYZ"
+	defaultEntropy = cryptoRand.Reader
+	maxTime        = ULID{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}.time()
+	leftPad        = [6]byte{1, 36, 47, 223, 23, 0}
+	encoding       = "0123456789ABCDEFGHJKMNPQRSTVWXYZ"
 
 	InvalidSizeULIDSystemErrorCode       = errors.NewErrorCode("InvalidSizeULIDSystemErrorCode", 90412, 412)
 	InvalidTimeFormatULIDSystemErrorCode = errors.NewErrorCode("InvalidTimeFormatULIDSystemErrorCode", 90412, 412)
 	InvalidCharsULIDSystemErrorCode      = errors.NewErrorCode("InvalidCharsULIDSystemErrorCode", 90412, 412)
+	InvalidScopeULIDSystemErrorCode      = errors.NewErrorCode("InvalidScopeULIDSystemErrorCode", 90412, 412)
 
 	// https://github.com/RobThree/NUlid/blob/master/NUlid/Ulid.cs
 	// static initialization to avoid allocations

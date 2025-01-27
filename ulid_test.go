@@ -1,4 +1,4 @@
-package ulid
+package pulid
 
 import (
 	"bytes"
@@ -19,7 +19,7 @@ func TestULIDGeneration(t *testing.T) {
 		t.Fatalf("Failed to generate ULID: %v", err)
 	}
 
-	id2, err := New()
+	id2, err := NewScoped(567)
 	if err != nil {
 		t.Fatalf("Failed to generate ULID: %v", err)
 	}
@@ -32,7 +32,16 @@ func TestULIDGeneration(t *testing.T) {
 		t.Fatalf("ULID length is incorrect, expected 16 bytes, got %d", len(id1[:]))
 	}
 
+	if scope, err := id1.Scope(); err != nil || scope != MaxScopeValue {
+		t.Fatalf("ULID scope is incorrect, expected %d got %d; err %+v", MaxScopeValue, scope, err)
+	}
+
+	if scope, err := id2.Scope(); err != nil || scope != 567 {
+		t.Fatalf("ULID scope is incorrect, expected %d got %d; err %+v", MaxScopeValue, scope, err)
+	}
+
 	t.Logf("Generated ULID: %s", id1.String())
+	t.Logf("Generated ULID: %s", id2.String())
 }
 
 func TestULIDToUUIDConversion(t *testing.T) {
@@ -51,7 +60,7 @@ func TestULIDToUUIDConversion(t *testing.T) {
 		t.Fatalf("UUID string mismatch: expected %s, got %s", uuidStr, parsedUUID.String())
 	}
 
-	t.Logf("ULID to UUID conversion successful: %s", uuidStr)
+	t.Logf("ULID to UUID conversion successful: %s - %s", id.String(), uuidStr)
 }
 
 func TestULIDFormatComparison(t *testing.T) {
@@ -233,7 +242,7 @@ func TestUUIDUniquenessAfterConversion(t *testing.T) {
 		uuidSet[uuidStr] = true
 	}
 
-	t.Logf("All UUIDs generated from ULIDs are unique for %d iterations", ulidCount)
+	t.Logf("All UUIDs generated from ULIDs are unique for %d iterations; %+v", ulidCount, uuidSet)
 }
 
 func TestULIDToUUIDMassiveUniqueness(t *testing.T) {
