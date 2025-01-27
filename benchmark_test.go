@@ -27,7 +27,7 @@ func BenchmarkAnotherULIDGeneration(b *testing.B) {
 }
 
 // Benchmark for ULID generation
-func BenchmarkpULIDGeneration(b *testing.B) {
+func BenchmarkPULIDGeneration(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		s := MustNew().String()
 

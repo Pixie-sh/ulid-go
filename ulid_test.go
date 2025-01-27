@@ -19,7 +19,7 @@ func TestULIDGeneration(t *testing.T) {
 		t.Fatalf("Failed to generate ULID: %v", err)
 	}
 
-	id2, err := New()
+	id2, err := NewScoped(567)
 	if err != nil {
 		t.Fatalf("Failed to generate ULID: %v", err)
 	}
@@ -32,7 +32,16 @@ func TestULIDGeneration(t *testing.T) {
 		t.Fatalf("ULID length is incorrect, expected 16 bytes, got %d", len(id1[:]))
 	}
 
+	if scope, err := id1.Scope(); err != nil || scope != MaxScopeValue {
+		t.Fatalf("ULID scope is incorrect, expected %d got %d; err %+v", MaxScopeValue, scope, err)
+	}
+
+	if scope, err := id2.Scope(); err != nil || scope != 567 {
+		t.Fatalf("ULID scope is incorrect, expected %d got %d; err %+v", MaxScopeValue, scope, err)
+	}
+
 	t.Logf("Generated ULID: %s", id1.String())
+	t.Logf("Generated ULID: %s", id2.String())
 }
 
 func TestULIDToUUIDConversion(t *testing.T) {

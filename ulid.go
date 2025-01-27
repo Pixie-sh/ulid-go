@@ -20,8 +20,16 @@ import (
 // github.com/segmentio/ksuid
 
 type ULID [16]byte
+type Scope = uint16
 
-func New(customEntropy ...io.Reader) (ULID, error) {
+// New returns a ULID where the 7th and 8th bytes are filled with MaxScopeValue value
+func New (customEntropy ...io.Reader) (ULID, error) {
+	return NewScoped(MaxScopeValue, customEntropy...)
+}
+
+// NewScoped returns a ULID where the 7th and 8th bytes are filled with input scope
+// or with MaxScopeValue value if ZeroedScopeValue is passed
+func NewScoped(scope Scope, customEntropy ...io.Reader) (ULID, error) {
 	var (
 		id       = EmptyUID
 		now      = time.Now()
@@ -33,10 +41,14 @@ func New(customEntropy ...io.Reader) (ULID, error) {
 		entropy = customEntropy[0]
 	}
 
-	//7th and 8th reserved for entity types
-	//2^{16} = 65536
+	if scope == ZeroedScopeValue {
+		scope = MaxScopeValue
+	}
 
-	if _, err = entropy.Read(id[9:]); err != nil {
+	//7th and 8th reserved for scoping the ulid
+	binary.BigEndian.PutUint16(id[6:8], scope)
+
+	if _, err = entropy.Read(id[8:]); err != nil {
 		return id, err
 	}
 
@@ -49,6 +61,15 @@ func New(customEntropy ...io.Reader) (ULID, error) {
 
 func MustNew(customEntropy ...io.Reader) ULID {
 	id, err := New(customEntropy...)
+	if err != nil {
+		panic(err)
+	}
+
+	return id
+}
+
+func MustNewScoped(scope Scope, customEntropy ...io.Reader) ULID {
+	id, err := NewScoped(scope, customEntropy...)
 	if err != nil {
 		panic(err)
 	}
@@ -374,4 +395,14 @@ func (id ULID) MarshallUint64() (uint64, error) {
 	}
 
 	return res, nil
+}
+
+
+func (id ULID) Scope() (Scope, error) {
+	var scope = binary.BigEndian.Uint16(id[6:8])
+	if scope == ZeroedScopeValue {
+		return ZeroedScopeValue, errors.New("invalid scope").WithErrorCode(InvalidScopeULIDSystemErrorCode)
+	}
+
+	return scope, nil
 }
