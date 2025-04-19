@@ -3,6 +3,7 @@ package pulid
 import (
 	"bytes"
 	"crypto/rand"
+	"encoding/json"
 	"fmt"
 	"regexp"
 	"sync"
@@ -329,4 +330,142 @@ func TestConcurrentULIDToUUIDUniqueness(t *testing.T) {
 	}
 
 	t.Logf("Successfully generated %d unique UUIDs across %d workers", totalIDs, numWorkers)
+}
+
+func TestULIDParsing(t *testing.T) {
+	// Test parsing a valid ULID string
+	original, _ := New()
+	str := original.String()
+
+	parsed, err := UnmarshalString(str)
+	if err != nil {
+		t.Fatalf("Failed to parse valid ULID string: %v", err)
+	}
+
+	if parsed != original {
+		t.Fatalf("Parsed ULID doesn't match original: %v != %v", parsed, original)
+	}
+
+	// Test parsing an invalid string
+	_, err = UnmarshalString("invalid-ulid-string")
+	if err == nil {
+		t.Fatalf("Expected error when parsing invalid ULID string")
+	}
+}
+
+func TestULIDMustFunctions(t *testing.T) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Fatalf("MustParse with invalid input should panic")
+		}
+	}()
+
+	// Test successful MustParse
+	original := MustNew()
+	str := original.String()
+	parsed, _ := UnmarshalString(str)
+	if parsed != original {
+		t.Fatalf("MustParse result doesn't match original")
+	}
+	 _, err := UnmarshalString("invalid-ulid-string")
+	if err != nil {
+		panic(err)
+	}
+}
+
+func TestULIDScopeEdgeCases(t *testing.T) {
+	// Test with scope of 0
+	id, err := NewScoped(ZeroedScopeValue)
+	if err != nil {
+		t.Fatalf("Failed to create ULID with scope 0: %v", err)
+	}
+	scope, _ := id.Scope()
+	if scope != MaxScopeValue {
+		t.Fatalf("Expected scope MaxScopeValue, got %d", scope)
+	}
+
+	// Test with max valid scope
+	id, err = NewScoped(MaxScopeValue)
+	if err != nil {
+		t.Fatalf("Failed to create ULID with max scope: %v", err)
+	}
+	scope, _ = id.Scope()
+	if scope != MaxScopeValue {
+		t.Fatalf("Expected scope %d, got %d", MaxScopeValue, scope)
+	}
+
+	// Test with invalid scope (too large)
+	u, err := NewScoped(MaxScopeValue + 1)
+	if err != nil {
+		t.Fatalf("no error expected as compiler trim its to zero")
+	}
+
+	if s, _ := u.Scope(); s != MaxScopeValue {
+		t.Fatalf("Expected scope %d, got %d", MaxScopeValue, s)
+	}
+}
+
+func TestULIDConcurrency(t *testing.T) {
+	const goroutines = 100
+	const ulidsPerRoutine = 100
+
+	var wg sync.WaitGroup
+	idChan := make(chan ULID, goroutines*ulidsPerRoutine)
+
+	wg.Add(goroutines)
+	for i := 0; i < goroutines; i++ {
+		go func() {
+			defer wg.Done()
+			for j := 0; j < ulidsPerRoutine; j++ {
+				id, err := New()
+				if err != nil {
+					t.Errorf("ULID generation failed: %v", err)
+					return
+				}
+				idChan <- id
+			}
+		}()
+	}
+
+	wg.Wait()
+	close(idChan)
+
+	// Check for uniqueness
+	seen := make(map[ULID]bool)
+	for id := range idChan {
+		if seen[id] {
+			t.Fatalf("Duplicate ULID detected: %v", id)
+		}
+		seen[id] = true
+	}
+}
+
+func TestULIDJSON(t *testing.T) {
+	id, _ := New()
+
+	// Test marshalling
+	jsonData, err := json.Marshal(id)
+	if err != nil {
+		t.Fatalf("JSON marshalling failed: %v", err)
+	}
+
+	// Test unmarshalling
+	var unmarshalled ULID
+	if err := json.Unmarshal(jsonData, &unmarshalled); err != nil {
+		t.Fatalf("JSON unmarshalling failed: %v", err)
+	}
+
+	if id != unmarshalled {
+		t.Fatalf("JSON round trip failed: expected %v, got %v", id, unmarshalled)
+	}
+
+	// Test unmarshalling from a string
+	jsonString := fmt.Sprintf(`"%s"`, id.String())
+	if err := json.Unmarshal([]byte(jsonString), &unmarshalled); err != nil {
+		t.Fatalf("JSON unmarshalling from string failed: %v", err)
+	}
+
+	if id != unmarshalled {
+		t.Fatalf("JSON string unmarshalling failed: expected %v, got %v", id, unmarshalled)
+	}
 }

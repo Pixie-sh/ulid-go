@@ -21,10 +21,10 @@ var (
 	leftPad        = [6]byte{1, 36, 47, 223, 23, 0}
 	encoding       = "0123456789ABCDEFGHJKMNPQRSTVWXYZ"
 
-	InvalidSizeULIDSystemErrorCode       = errors.NewErrorCode("InvalidSizeULIDSystemErrorCode", 90412, 412)
-	InvalidTimeFormatULIDSystemErrorCode = errors.NewErrorCode("InvalidTimeFormatULIDSystemErrorCode", 90412, 412)
-	InvalidCharsULIDSystemErrorCode      = errors.NewErrorCode("InvalidCharsULIDSystemErrorCode", 90412, 412)
-	InvalidScopeULIDSystemErrorCode      = errors.NewErrorCode("InvalidScopeULIDSystemErrorCode", 90412, 412)
+	InvalidSizeULIDSystemErrorCode       = errors.NewErrorCode("InvalidSizeULIDSystemErrorCode", 90412)
+	InvalidTimeFormatULIDSystemErrorCode = errors.NewErrorCode("InvalidTimeFormatULIDSystemErrorCode", 90412)
+	InvalidCharsULIDSystemErrorCode      = errors.NewErrorCode("InvalidCharsULIDSystemErrorCode", 90412)
+	InvalidScopeULIDSystemErrorCode      = errors.NewErrorCode("InvalidScopeULIDSystemErrorCode", 90412)
 
 	// https://github.com/RobThree/NUlid/blob/master/NUlid/Ulid.cs
 	// static initialization to avoid allocations

@@ -23,7 +23,7 @@ type ULID [16]byte
 type Scope = uint16
 
 // New returns a ULID where the 7th and 8th bytes are filled with MaxScopeValue value
-func New (customEntropy ...io.Reader) (ULID, error) {
+func New(customEntropy ...io.Reader) (ULID, error) {
 	return NewScoped(MaxScopeValue, customEntropy...)
 }
 
@@ -31,11 +31,17 @@ func New (customEntropy ...io.Reader) (ULID, error) {
 // or with MaxScopeValue value if ZeroedScopeValue is passed
 func NewScoped(scope Scope, customEntropy ...io.Reader) (ULID, error) {
 	var (
-		id       = EmptyUID
-		now      = time.Now()
-		entropy  = defaultEntropy
-		err      error
+		id      = EmptyUID
+		now     = time.Now()
+		entropy = defaultEntropy
+		err     error
 	)
+
+	if scope > MaxScopeValue {
+		return EmptyUID, errors.
+			New("scope value overflow; max %d < input %d", MaxScopeValue, scope).
+			WithErrorCode(InvalidScopeULIDSystemErrorCode)
+	}
 
 	if len(customEntropy) > 0 && customEntropy[0] != nil {
 		entropy = customEntropy[0]
@@ -219,7 +225,6 @@ func (id *ULID) Scan(src interface{}) (err error) {
 		New("invalid storage format: size must either be 16 bytes or a UUID string").
 		WithErrorCode(InvalidSizeULIDSystemErrorCode)
 
-
 	switch v := src.(type) {
 	case []byte:
 		switch len(v) {
@@ -396,7 +401,6 @@ func (id ULID) MarshallUint64() (uint64, error) {
 
 	return res, nil
 }
-
 
 func (id ULID) Scope() (Scope, error) {
 	var scope = binary.BigEndian.Uint16(id[6:8])
