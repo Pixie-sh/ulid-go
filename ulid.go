@@ -186,6 +186,10 @@ func (id ULID) Bytes() ([]byte, error) {
 }
 
 func (id ULID) UUID() string {
+	return unsafe.String(&id.MarshalUUID()[0], uuidStringLength)
+}
+
+func (id ULID) MarshalUUID() []byte {
 	byteSlice := make([]byte, uuidStringLength)
 
 	hex.Encode(byteSlice[0:8], id[0:4])
@@ -198,7 +202,7 @@ func (id ULID) UUID() string {
 	byteSlice[23] = '-'
 	hex.Encode(byteSlice[24:], id[10:])
 
-	return unsafe.String(&byteSlice[0], uuidStringLength)
+	return byteSlice
 }
 
 func (id ULID) ULID() string {
@@ -230,6 +234,12 @@ func (id ULID) Format(f fmt.State, verb rune) {
 	case 's':
 		blob, _ := id.MarshalText()
 		_, _ = f.Write(blob)
+	case 'u':
+		blob := id.MarshalUUID()
+		_, _ = f.Write(blob)
+	case 'v':
+		scp, _ := id.Scope()
+		_, _ = fmt.Fprintf(f, "%s(epoch=%d;scope=%d)", id.String(), id.Epoch(), scp)
 	default:
 		_, _ = fmt.Fprintf(f, "%%!%c(ULID=%s)", verb, id.String())
 	}

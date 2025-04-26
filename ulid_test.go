@@ -469,3 +469,18 @@ func TestULIDJSON(t *testing.T) {
 		t.Fatalf("JSON string unmarshalling failed: expected %v, got %v", id, unmarshalled)
 	}
 }
+
+func TestULIDTimestampEdgeCases(t *testing.T) {
+	uFromUuid, _ := UnmarshalUUID("019672bc-73c3-ffff-9e66-1b0983a0ec48")
+
+	fmt.Println(MustNew())
+	fmt.Println(uFromUuid)
+	fmt.Printf("%v",MustNew())
+	fmt.Printf("\n %u",MustNew())
+	fmt.Printf("\n %v",uFromUuid)
+
+	n := MustNew()
+	if fmt.Sprintf("%u", n) != n.UUID() {
+		t.Fatalf("ULID u fromatter and UUID should be equal")
+	}
+}
