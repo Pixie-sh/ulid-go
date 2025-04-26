@@ -17,7 +17,7 @@ var (
 	ZeroedScopeValue = Scope(0)
 
 	defaultEntropy = cryptoRand.Reader
-	maxTime        = ULID{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}.time()
+	maxTime        = ULID{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}.Epoch()
 	leftPad        = [6]byte{1, 36, 47, 223, 23, 0}
 	encoding       = "0123456789ABCDEFGHJKMNPQRSTVWXYZ"
 

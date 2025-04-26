@@ -10,10 +10,10 @@ github.com/mitchellh/mapstructure v1.5.0 h1:jeMsZIYE/09sWLaz43PL7Gy6RuMjD2eJVyua
 github.com/mitchellh/mapstructure v1.5.0/go.mod h1:bFUtVrKA4DC2yAKiSyO/QUcy7e+RRV2QTWOzhPopBRo=
 github.com/oklog/ulid v1.3.1 h1:EGfNDEx6MqHz8B3uNV6QAib1UR2Lm97sHi3ocA6ESJ4=
 github.com/oklog/ulid v1.3.1/go.mod h1:CirwcVhetQ6Lv90oh/F+FBtV6XMibvdAFo93nm5qn4U=
-github.com/pixie-sh/errors-go v0.3.0 h1:IfmJC5dxkt/15mkG2bnJqN8nIyV/CG6xEx77zSqc7/g=
-github.com/pixie-sh/errors-go v0.3.0/go.mod h1:Y1N/JjJyD6v0HOEJ7168wE68STOUYdROGYOSLMo2MHY=
-github.com/pixie-sh/logger-go v0.4.1 h1:u0V3aEumxLI/bzj4tG4isKnCdBN69Pq5wTE/g50lcOc=
-github.com/pixie-sh/logger-go v0.4.1/go.mod h1:F0f2FqyQAA8K6f+/mlkYC2fE6SjHOdvlPO/PY7J8Lrc=
+github.com/pixie-sh/errors-go v0.3.3 h1:rH2eZVbO+j+kViU2XYfaAjHw+QPZiZymR89NMk2OIAg=
+github.com/pixie-sh/errors-go v0.3.3/go.mod h1:Y1N/JjJyD6v0HOEJ7168wE68STOUYdROGYOSLMo2MHY=
+github.com/pixie-sh/logger-go v0.4.2 h1:8mAiODQqjKs+DMtn3P4K4zIeNzcVJH4EGgW4m9hX2WU=
+github.com/pixie-sh/logger-go v0.4.2/go.mod h1:F0f2FqyQAA8K6f+/mlkYC2fE6SjHOdvlPO/PY7J8Lrc=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/stretchr/testify v1.10.0 h1:Xv5erBjTwe/5IxqUQTdXv5kgmIvbHo3QQyRwhJsOfJA=

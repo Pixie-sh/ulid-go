@@ -5,6 +5,7 @@ import (
 	"database/sql/driver"
 	"encoding/binary"
 	"encoding/hex"
+	"fmt"
 	"io"
 	"time"
 	"unsafe"
@@ -200,6 +201,10 @@ func (id ULID) UUID() string {
 	return unsafe.String(&byteSlice[0], uuidStringLength)
 }
 
+func (id ULID) ULID() string {
+	return id.EncodeString()
+}
+
 func (id ULID) String() string {
 	return id.EncodeString()
 }
@@ -218,6 +223,16 @@ func (id ULID) EncodeUUID() string {
 	hex.Encode(buf, id[:])
 
 	return *(*string)(unsafe.Pointer(&buf))
+}
+
+func (id ULID) Format(f fmt.State, verb rune) {
+	switch verb {
+	case 's':
+		blob, _ := id.MarshalText()
+		_, _ = f.Write(blob)
+	default:
+		_, _ = fmt.Fprintf(f, "%%!%c(ULID=%s)", verb, id.String())
+	}
 }
 
 func (id *ULID) Scan(src interface{}) (err error) {
@@ -359,7 +374,7 @@ func (id *ULID) UnmarshalText(v []byte) error {
 	return nil
 }
 
-func (id ULID) time() uint64 {
+func (id ULID) Epoch() uint64 {
 	return uint64(id[5]) | uint64(id[4])<<8 |
 		uint64(id[3])<<16 | uint64(id[2])<<24 |
 		uint64(id[1])<<32 | uint64(id[0])<<40
@@ -370,7 +385,7 @@ func (id *ULID) setTime(t time.Time) error {
 		uint64(t.Nanosecond()/int(time.Millisecond))
 
 	if ms > maxTime {
-		return errors.New("time overflow").WithErrorCode(InvalidTimeFormatULIDSystemErrorCode)
+		return errors.New("epoch overflow").WithErrorCode(InvalidTimeFormatULIDSystemErrorCode)
 	}
 
 	(*id)[0] = byte(ms >> 40)

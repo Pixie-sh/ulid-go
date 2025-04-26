@@ -142,7 +142,7 @@ func TestULIDTimestamp(t *testing.T) {
 		t.Fatalf("Failed to generate ULID: %v", err)
 	}
 
-	ulidTime := time.Unix(int64(id.time()/1000), int64(id.time()%1000)*int64(time.Millisecond))
+	ulidTime := time.Unix(int64(id.Epoch()/1000), int64(id.Epoch()%1000)*int64(time.Millisecond))
 	if !ulidTime.Truncate(time.Millisecond).Equal(now.Truncate(time.Millisecond)) {
 		t.Fatalf("Timestamp mismatch: expected %v, got %v", now, ulidTime)
 	}
@@ -295,7 +295,7 @@ func TestConcurrentULIDToUUIDUniqueness(t *testing.T) {
 			uuidStr := id.UUID()
 
 			// Check uniqueness in a thread-safe manner
-			entry := fmt.Sprintf("worker-%d;time:%s", start, time.Now().UTC().String())
+			entry := fmt.Sprintf("worker-%d;Epoch:%s", start, time.Now().UTC().String())
 			if existing, exists := ulidSet.LoadOrStore(id, entry); exists {
 				errChan <- fmt.Errorf("duplicate ULID detected: %s worker %s <-> existing: %s", id.String(), entry, existing.(string))
 				return
