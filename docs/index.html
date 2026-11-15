@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="pULID: a 128-bit, time-sortable identifier that is a valid ULID and a valid UUID, with a two-byte scope for the entity type. For Go and JavaScript.">
+<title>pULID</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700;800&display=swap">
+<style>
+/* Layout: pixie.sh's look — black ground, white Inter, and the red/green/blue channel offset
+   on headings, labels and card edges. Single dark theme by design. */
+:root {
+  --bg: #0a0a0a;
+  --black: #000;
+  --raise: #1a1a1a;
+  --ink: #fff;
+  --muted: #b9b9b9;
+  --line: #2a2a2a;
+  --r: #e52320;
+  --g: #00ff00;
+  --b: #0000ff;
+  --g-soft: rgba(0, 255, 0, 0.1);
+  --g-line: rgba(0, 255, 0, 0.3);
+  --body: Inter, "Helvetica Neue", Arial, sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --split: -2px -1.2px 0 var(--r), -2.5px -0.6px 0 var(--g);
+  --edges: -3px 3px 0 var(--r), -1.5px -1.5px 0 var(--b), 2px -2px 0 var(--g);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 400 1.0625rem/1.6 var(--body); }
+.wrap {
+  max-width: 68rem; margin-inline: auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+a { color: inherit; text-decoration-color: var(--g); text-underline-offset: 0.2em; transition: color 0.3s ease, text-shadow 0.3s ease; }
+a:hover { color: var(--g); text-shadow: -2px -0.1px 0 var(--b), -3px -0.1px 0 var(--r); }
+:focus-visible { outline: 2px solid var(--g); outline-offset: 3px; }
+code, pre, .mono { font-family: var(--mono); }
+p code, li code, td code { font-size: 0.88em; color: var(--g); background: var(--g-soft); padding: 0.08em 0.35em; border-radius: 3px; }
+h1, h2, h3 { font-family: var(--body); text-wrap: balance; margin: 0; }
+p { margin: 0; max-width: 62ch; }
+
+/* top bar */
+.top { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; flex-wrap: wrap; padding-block: 1.25rem; }
+.top .name { font: 700 1rem var(--body); letter-spacing: -0.01em; text-shadow: var(--split); }
+.top nav { display: flex; gap: 1.5rem; font-size: 0.95rem; }
+.top nav a { text-decoration: none; }
+
+/* hero */
+.hero { padding-block: 3.5rem 4rem; display: flex; flex-direction: column; gap: 2rem; }
+h1 {
+  font-size: clamp(2.5rem, 7.4vw, 5.5rem); font-weight: 800; line-height: 1; letter-spacing: -0.04em; max-width: 14ch;
+  padding-left: 0.1em;
+  text-shadow: -0.06em 0.04em 0 var(--r), -0.06em -0.03em 0 var(--b), -0.08em -0.07em 0 var(--g);
+}
+h1 em { font-style: normal; }
+.lede { font-size: 1.25rem; font-weight: 300; line-height: 1.5; max-width: 54ch; }
+.cmd { display: flex; align-items: stretch; background: var(--black); color: var(--ink); max-width: 100%; width: fit-content; box-shadow: var(--edges); margin-left: 3px; }
+.cmd pre { margin: 0; padding: 0.9rem 1rem; overflow-x: auto; font-size: 0.9rem; min-width: 0; }
+.cmd pre::before { content: "$ "; color: var(--g); }
+.cmd button { font: 700 0.8rem var(--body); color: var(--g); background: var(--g-soft); border: 0; border-left: 2px solid var(--g); padding: 0 1.1rem; cursor: pointer; transition: background 0.2s ease; }
+.cmd button:hover { background: rgba(0, 255, 0, 0.2); }
+.fine { font-size: 0.92rem; color: var(--muted); }
+
+/* bands: the green rule with its blue echo, as on pixie.sh's track line */
+section { padding-block: 4rem; display: flex; flex-direction: column; gap: 2rem; position: relative; }
+section::before { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: var(--g); box-shadow: -3px 2px 0 var(--b); }
+.label { font: 400 0.95rem var(--body); letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink); text-shadow: var(--split); }
+h2 { font-size: clamp(1.9rem, 4vw, 3rem); font-weight: 700; line-height: 1.08; letter-spacing: -0.03em; max-width: 22ch; }
+h3 { font-size: 1.15rem; font-weight: 700; letter-spacing: -0.01em; }
+.head { display: flex; flex-direction: column; gap: 0.85rem; }
+.head p { font-weight: 300; }
+
+/* before / after figure */
+.fig { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr)); gap: 2rem; padding-inline: 3px; }
+.panel { background: var(--black); box-shadow: var(--edges); padding: 1.35rem; display: flex; flex-direction: column; gap: 1.1rem; min-width: 0; }
+.panel h3 { font: 700 0.8rem var(--body); letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.rows { display: grid; gap: 0.5rem; }
+.row { display: grid; grid-template-columns: 1fr 2.5rem 1fr; align-items: center; }
+.chip { font: 700 0.85rem var(--body); letter-spacing: 0.02em; border: 1px solid var(--line); background: var(--raise); padding: 0.55rem 0.7rem; min-width: 0; overflow-wrap: anywhere; }
+.chip.silo { border: 1px dashed var(--r); background: transparent; color: var(--muted); font-weight: 400; }
+.wire { height: 0; border-top: 1px dashed var(--muted); }
+.merge { display: grid; grid-template-columns: 1fr 2.5rem 1fr; align-items: stretch; }
+.merge .rows { align-content: center; }
+.merge .bus { border: 2px solid var(--g); border-left: 0; margin-block: 1.1rem; box-shadow: 2px 1px 0 var(--b); }
+.owner { display: flex; flex-direction: column; justify-content: center; gap: 0.5rem; }
+.owner .chip { border: 2px solid var(--g); background: var(--g-soft); color: var(--g); }
+.owner .down { font: 400 0.8rem var(--mono); color: var(--muted); padding-left: 0.7rem; }
+.panel p { font-size: 0.97rem; color: var(--muted); }
+
+/* lists of points */
+.points { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr)); gap: 2rem 2.5rem; }
+.points div { display: flex; flex-direction: column; gap: 0.45rem; min-width: 0; }
+.points h3 { text-shadow: -2px 1px 0 var(--b); }
+.points p { font-size: 1rem; color: var(--muted); }
+
+/* tables */
+.scroll { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 0.95rem; }
+th, td { text-align: left; padding: 0.7rem 1rem 0.7rem 0; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th { font: 700 0.75rem var(--body); letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); border-bottom-color: var(--r); }
+td.mono, td .mono { font-size: 0.88rem; font-variant-numeric: tabular-nums; }
+.yes { color: var(--g); font-weight: 700; }
+.no { color: var(--muted); }
+
+/* tabs */
+.tabs { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.tabs button { font: 700 0.85rem var(--body); color: var(--muted); background: transparent; border: 2px solid var(--line); padding: 0.45rem 0.85rem; cursor: pointer; transition: all 0.2s ease; }
+.tabs button:hover { color: var(--g); border-color: var(--g-line); }
+.tabs button[aria-selected="true"] { color: var(--g); border-color: var(--g); background: var(--g-soft); }
+.snippet { background: var(--black); color: var(--ink); border: 2px solid rgba(0, 255, 0, 0.2); overflow-x: auto; }
+.snippet pre { margin: 0; padding: 1rem 1.1rem; font-size: 0.88rem; line-height: 1.55; }
+.snippet .where { display: block; color: var(--g); opacity: 0.7; }
+
+.status { display: grid; gap: 0.7rem; padding: 0; margin: 0; list-style: none; max-width: 62ch; }
+.status li { display: grid; grid-template-columns: 6.5rem 1fr; gap: 0.75rem; align-items: baseline; }
+.status .tag { font: 700 0.75rem var(--body); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.status .tag.ok { color: var(--g); }
+
+footer { border-top: 1px solid var(--r); box-shadow: 0 -2px 0 -1px var(--b); padding-block: 2rem 3rem; font-size: 0.92rem; color: var(--muted); display: flex; flex-wrap: wrap; gap: 0.5rem 1.5rem; justify-content: space-between; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+/* code panels and library grid, added for the library pages */
+.snippet[hidden] { display: none; }
+.snippet .out { display: block; color: var(--muted); }
+.fig pre { margin: 0; font-size: 0.82rem; line-height: 1.5; overflow-x: auto; color: var(--ink); }
+.fig .panel.good { box-shadow: -3px 3px 0 var(--g), -1.5px -1.5px 0 var(--b), 2px -2px 0 var(--g); }
+.bytes { display: grid; grid-template-columns: 6fr 2fr 8fr; gap: 0.5rem; padding-inline: 3px; }
+.bytes div { background: var(--black); box-shadow: var(--edges); padding: 1rem; min-width: 0; display: flex; flex-direction: column; gap: 0.3rem; }
+.bytes b { font: 700 1rem var(--body); }
+.bytes span { font-size: 0.85rem; color: var(--muted); }
+.bytes .scope { box-shadow: -3px 3px 0 var(--g), -1.5px -1.5px 0 var(--g), 2px -2px 0 var(--g); }
+.bytes .scope b { color: var(--g); }
+td.wrap-ok { white-space: normal; min-width: 12rem; }
+.libs { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr)); gap: 1.5rem; padding-inline: 3px; }
+.libs a { background: var(--black); box-shadow: var(--edges); padding: 1.1rem; text-decoration: none; display: flex; flex-direction: column; gap: 0.35rem; }
+.libs a b { font: 700 1.05rem var(--body); }
+.libs a span { font-size: 0.92rem; color: var(--muted); }
+.libs a[aria-current] { box-shadow: -3px 3px 0 var(--g), -1.5px -1.5px 0 var(--g), 2px -2px 0 var(--g); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <span class="name">pULID</span>
+    <nav>
+      <a href="#usage">Usage</a>
+      <a href="#bench">Benchmark</a>
+      <a href="https://github.com/pixie-sh/ulid-go">GitHub</a>
+      <a href="https://pixie.sh">pixie.sh</a>
+    </nav>
+  </header>
+
+  <div class="hero">
+    <h1>An ID that tells you <em>what it points to.</em></h1>
+    <p class="lede">pULID is a 128-bit identifier that is a valid ULID and a valid UUID at once. It sorts by creation time and reserves two bytes for a scope, such as the entity type. Available for Go and JavaScript.</p>
+    <div class="cmd">
+      <pre id="install-cmd">go get github.com/pixie-sh/ulid-go</pre>
+      <button type="button" id="copy-install" data-copy="install-cmd">Copy</button>
+    </div>
+    <p class="fine">JavaScript: <code>npm install github:pixie-sh/ulid-js</code>. MIT licensed. References: <a href="https://github.com/pixie-sh/ulid-go#readme">ulid-go</a> and <a href="https://github.com/pixie-sh/ulid-js#readme">ulid-js</a>.</p>
+  </div>
+
+  <section id="problem">
+    <div class="head">
+      <span class="label">The problem</span>
+      <h2>A UUID tells you nothing. A serial ID tells everyone too much.</h2>
+      <p>Random UUIDs do not sort and say nothing about what they identify. Serial integers sort, but leak volume and collide across tables. Given an ID in a log line, you still have to guess which table to look in.</p>
+    </div>
+    <div class="bytes">
+      <div><b>Timestamp</b><span>6 bytes, milliseconds since the Unix epoch. IDs sort by creation time.</span></div>
+      <div class="scope"><b>Scope</b><span>2 bytes, yours to assign.</span></div>
+      <div><b>Entropy</b><span>8 bytes from a cryptographically secure source.</span></div>
+    </div>
+    <div class="points">
+      <div><h3>Two notations, one value</h3><p>The same 16 bytes print as a 26-character ULID or as a UUID, so the ID fits a <code>uuid</code> column.</p></div>
+      <div><h3>The scope names the entity</h3><p>65,534 scopes are available. Give one to each entity type and an ID says what it is without a lookup.</p></div>
+      <div><h3>Sortable</h3><p>IDs created later sort later, which keeps indexes compact and lists in order.</p></div>
+    </div>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>Scope</th><th>As ULID</th><th>As UUID</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">2</td><td class="wrap-ok">01M7DFAH9J00108T5TB1A2837M</td><td class="wrap-ok">01a1daf5-4532-0002-0468-ba5854240cf4</td></tr>
+          <tr><td class="mono">567</td><td class="wrap-ok">01JJN1AD5B08VJ5SRBJAWCBWDQ</td><td class="wrap-ok">0194AA15-34AB-0237-22E7-0B92B8C5F1B7</td></tr>
+          <tr><td class="mono">65535 (default in Go)</td><td class="wrap-ok">01JJN0XQ6YZZZN7WGR4NZP1C1Q</td><td class="wrap-ok">0194AA0E-DCDE-FFFF-53F2-18257F60B037</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="fine">The scope is the third group of the UUID: <code>0002</code>, <code>0237</code>, <code>FFFF</code>.</p>
+  </section>
+
+  <section id="usage">
+    <div class="head">
+      <span class="label">Usage</span>
+      <h2>The same ID in Go, in JavaScript and in the database.</h2>
+    </div>
+    <div>
+      <div class="tabs" role="tablist" aria-label="Example">
+        <button type="button" role="tab" id="tab-usage-0" aria-controls="snip-usage-0" aria-selected="true">Go</button>
+        <button type="button" role="tab" id="tab-usage-1" aria-controls="snip-usage-1" aria-selected="false">JavaScript</button>
+        <button type="button" role="tab" id="tab-usage-2" aria-controls="snip-usage-2" aria-selected="false">Across both</button>
+        <button type="button" role="tab" id="tab-usage-3" aria-controls="snip-usage-3" aria-selected="false">JSON and SQL</button>
+        <button type="button" role="tab" id="tab-usage-4" aria-controls="snip-usage-4" aria-selected="false">PostgreSQL</button>
+      </div>
+    </div>
+    <div class="snippet" id="snip-usage-0" role="tabpanel" aria-labelledby="tab-usage-0"><pre>import pulid &quot;github.com/pixie-sh/ulid-go&quot;
+
+const (
+    ScopeUser  pulid.Scope = 1
+    ScopeOrder pulid.Scope = 2
+)
+
+id := pulid.MustNewScoped(ScopeOrder)
+
+fmt.Println(id.String()) // 01M7DFAH9J00108T5TB1A2837M
+fmt.Println(id.UUID())   // 01a1daf5-4532-0002-0468-ba5854240cf4
+
+scope, _ := id.Scope()   // 2
+created := time.UnixMilli(int64(id.Epoch()))
+
+// parse either notation
+id, err := pulid.UnmarshalString(&quot;01M7DFAH9J00108T5TB1A2837M&quot;)
+id, err = pulid.UnmarshalUUID(&quot;01a1daf5-4532-0002-0468-ba5854240cf4&quot;)</pre></div>
+    <div class="snippet" id="snip-usage-1" role="tabpanel" aria-labelledby="tab-usage-1"><pre>const { pulid, pULID, pULIDGenerator } = require(&#x27;@pixie-sh/pulid&#x27;);
+
+const id = pulid({ scope: 2 });      // &quot;01M7DFJ38Z0012BKWF08R3CKGS&quot;
+
+const parsed = pULID.parse(id);
+parsed.getScope();                   // 2
+parsed.getTime();                    // Date the ID was created
+parsed.toUUID();                     // &quot;01a1daf9-0d1f-0002-25cf-8f0230364e19&quot;
+
+// a generator when most IDs share a scope
+const orders = new pULIDGenerator({ defaultScope: 2 });
+orders.generateString();</pre></div>
+    <div class="snippet" id="snip-usage-2" role="tabpanel" aria-labelledby="tab-usage-2"><pre>// Go service
+id := pulid.MustNewScoped(ScopeOrder)
+fmt.Println(id) // 01M7DFAH9J00108T5TB1A2837M
+
+// JavaScript client, given that string
+const order = pULID.parse(&#x27;01M7DFAH9J00108T5TB1A2837M&#x27;);
+order.getScope(); // 2
+order.toUUID();   // 01a1daf5-4532-0002-0468-ba5854240cf4, the value the Go service stored</pre></div>
+    <div class="snippet" id="snip-usage-3" role="tabpanel" aria-labelledby="tab-usage-3"><pre>// ULID implements TextMarshaler, sql.Scanner and driver.Valuer
+type Order struct {
+    ID pulid.ULID `json:&quot;id&quot;`
+}
+
+b, _ := json.Marshal(Order{ID: id}) // {&quot;id&quot;:&quot;01M7DFAH9J00108T5TB1A2837M&quot;}
+
+var stored pulid.ULID
+err := db.QueryRowContext(ctx, &quot;SELECT id FROM orders WHERE number = $1&quot;, 1001).Scan(&amp;stored)</pre></div>
+    <div class="snippet" id="snip-usage-4" role="tabpanel" aria-labelledby="tab-usage-4"><pre>-- uuid_to_ulid_pg16.sql ships with ulid-go (PostgreSQL 16+)
+SELECT uuid_to_ulid(id), *
+FROM orders
+ORDER BY id DESC   -- newest first, no created_at needed
+LIMIT 10;</pre></div>
+  </section>
+
+  <section id="bench">
+    <div class="head">
+      <span class="label">Benchmark</span>
+      <h2>Generate and parse, next to the alternatives.</h2>
+      <p>From the benchmark in the ulid-go repository, which creates an ID and parses it back, on an Apple M3 Max. Run <code>go test -bench .</code> to measure on your own hardware.</p>
+    </div>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>Generator</th><th>ns/op</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">oklog/ulid</td><td class="wrap-ok">125.9</td></tr>
+          <tr><td class="mono">pULID</td><td class="wrap-ok">139.2</td></tr>
+          <tr><td class="mono">google/uuid</td><td class="wrap-ok">246.9</td></tr>
+          <tr><td class="mono">go-nanoid</td><td class="wrap-ok">288.0</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="status">
+    <div class="head">
+      <span class="label">Status</span>
+      <h2>What works today, and what does not yet.</h2>
+    </div>
+    <ul class="status">
+      <li><span class="tag ok">Works</span><span>ulid-go, in daily use in our services.</span></li>
+      <li><span class="tag ok">Works</span><span>ulid-js, tested against IDs generated by ulid-go.</span></li>
+      <li><span class="tag">Not yet</span><span>The npm package <code>@pixie-sh/pulid</code> is not published; install from GitHub for now.</span></li>
+      <li><span class="tag">Planned</span><span>Driver helpers for pgx and GORM.</span></li>
+      <li><span class="tag">Note</span><span>The default scope differs: <code>1</code> in JavaScript, <code>65535</code> in Go. Pass it explicitly when both sides create IDs.</span></li>
+    </ul>
+  </section>
+
+  <section id="family">
+    <div class="head">
+      <span class="label">Open source at Pixie</span>
+      <h2>One of a set that works together.</h2>
+      <p>These libraries run in our own services every day. Use one, or all of them.</p>
+    </div>
+    <div class="libs">
+      <a href="https://pixie-sh.github.io/memory-sharing-mcp/"><b>memory-sharing-mcp</b><span>One shared memory store for every agent CLI.</span></a>
+      <a href="https://pixie-sh.github.io/di-go/"><b>di-go</b><span>Dependency injection you can read.</span></a>
+      <a href="https://pixie-sh.github.io/ulid-go/" aria-current="page"><b>ulid-go</b><span>Sortable IDs that carry their entity type.</span></a>
+      <a href="https://pixie-sh.github.io/errors-go/"><b>errors-go</b><span>Errors with a code and an HTTP status.</span></a>
+      <a href="https://pixie-sh.github.io/database-helpers-go/"><b>database-helpers-go</b><span>Query pipelines for SQL and Elasticsearch.</span></a>
+      <a href="https://pixie-sh.github.io/core-go/"><b>core-go</b><span>The core libraries behind our Go services.</span></a>
+    </div>
+  </section>
+
+  <footer>
+    <span>Made by <a href="https://pixie.sh">Pixie</a>. MIT licensed.</span>
+    <a href="https://github.com/pixie-sh/ulid-go">github.com/pixie-sh/ulid-go</a>
+  </footer>
+</div>
+
+<script>
+(function () {
+  document.querySelectorAll('.tabs').forEach(function (list) {
+    var tabs = list.querySelectorAll('button');
+    function show(tab) {
+      tabs.forEach(function (t) {
+        var on = t === tab;
+        t.setAttribute('aria-selected', on ? 'true' : 'false');
+        document.getElementById(t.getAttribute('aria-controls')).hidden = !on;
+      });
+    }
+    tabs.forEach(function (t) { t.addEventListener('click', function () { show(t); }); });
+    show(tabs[0]);
+  });
+
+  var btn = document.getElementById('copy-install');
+  btn.addEventListener('click', function () {
+    var el = document.getElementById(btn.dataset.copy);
+    function select() {
+      var r = document.createRange(); r.selectNodeContents(el);
+      var s = getSelection(); s.removeAllRanges(); s.addRange(r);
+    }
+    try {
+      navigator.clipboard.writeText(el.textContent).then(function () {
+        btn.textContent = 'Copied';
+        setTimeout(function () { btn.textContent = 'Copy'; }, 1500);
+      }, select);
+    } catch (e) { select(); }
+  });
+})();
+</script>
+</body>
+</html>
